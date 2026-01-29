@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat en temps réel</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; }
+    #messages .msg {
+      background: #f2f2f2;
+      padding: 8px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .meta {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Chat en temps réel</h2>
+
+  <input type="text" id="pseudo" placeholder="Ton pseudo" style="width:30%; margin-bottom:10px;"><br>
+
+  <textarea id="msg" placeholder="Écris ton message..." rows="5" style="width:100%"></textarea><br>
+  <button onclick="sendMessage()">Envoyer</button>
+
+  <h3>Messages :</h3>
+  <div id="messages"></div>
+
+  <!-- Socket.IO client -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+  <script>
+    // ⚠️ Remplace par ton URL Render
+    const socket = io("https://TON-SERVICE-RENDER.onrender.com");
+
+    function sanitize(input) {
+      const div = document.createElement("div");
+      div.innerText = input;
+      return div.innerHTML;
+    }
+
+    // Réception d'un message
+    socket.on("message", (data) => {
+      const container = document.getElementById("messages");
+
+      const div = document.createElement("div");
+      div.className = "msg";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.innerHTML = `${sanitize(data.pseudo)} — ${new Date().toLocaleString("fr-FR")}`;
+
+      const text = document.createElement("div");
+      text.innerHTML = sanitize(data.text);
+
+      div.appendChild(meta);
+      div.appendChild(text);
+      container.appendChild(div);
+
+      container.scrollTop = container.scrollHeight;
+    });
+
+    // Envoi d'un message
+    function sendMessage() {
+      const pseudo = document.getElementById("pseudo").value.trim() || "Anonyme";
+      const text = document.getElementById("msg").value.trim();
+
+      if (!text) return;
+
+      socket.emit("message", { pseudo, text });
+
+      document.getElementById("msg").value = "";
+    }
+  </script>
+
+</body>
+</html>
